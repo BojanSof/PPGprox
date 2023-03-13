@@ -1,0 +1,9 @@
+&i2c0 {
+	vcnl4040@60 {
+		compatible = "vishay,vcnl4040";
+		reg = <0x60>;
+		led-current = <200>;
+		led-duty-cycle = <40>;
+		proximity-it = "8";
+	};
+};
