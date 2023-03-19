@@ -1,5 +1,9 @@
 #include "Vcnl4040.hpp"
 
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_DECLARE(ppg_using_proximity, LOG_LEVEL_DBG);
+
 namespace Hardware
 {
 namespace Sensor
@@ -13,11 +17,13 @@ namespace Sensor
         const auto dev = getDevicePointer();
         if(sensor_sample_fetch(dev) < 0)
         {
+            LOG_DBG("Can't fetch new proximity sample");
             return {};
         }
         sensor_value sensorValue{};
         if(sensor_channel_get(dev, SENSOR_CHAN_PROX, &sensorValue) < 0)
         {
+            LOG_DBG("Can't get new proximity sample");
             return {};
         }
         else

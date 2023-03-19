@@ -46,14 +46,16 @@ int main()
     using namespace std::chrono_literals;
     uint16_t proxVal{};
     int16_t proxFilteredVal{};
+    uint64_t timestampUs{};
     bool newVal{};
 
     Dsp::IIRFilter<2> proxFilter{
         { 0.13672873f, 0.0f, -0.13672873f, 1.705965f, -0.72654253f }
     };
 
-    auto sampleTimerCallback = [&prox, &proxVal, &newVal]{
+    auto sampleTimerCallback = [&prox, &proxVal, &timestampUs, &newVal]{
         proxVal = prox.getProximity().value_or(proxVal);
+        timestampUs = static_cast<uint64_t>(k_cycle_get_32()) * 1000000U / sys_clock_hw_cycles_per_sec();
         newVal = true;
     };
 
@@ -78,7 +80,7 @@ int main()
             if(newVal)
             {
                 proxFilteredVal = proxFilter(proxVal);
-                auto len = sprintf(serialBuf, "%d,%d\r\n", proxVal, proxFilteredVal);
+                auto len = sprintf(serialBuf, "%" PRIu64 ",%d,%d\r\n", timestampUs, proxVal, proxFilteredVal);
                 serial.write(reinterpret_cast<std::byte*>(serialBuf), len);
                 newVal = false;
             }
