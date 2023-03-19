@@ -23,12 +23,14 @@ namespace Dsp
 
         public:
             IIRFilter(const CoeffsT& coeffs)
-                : coeffs_{coeffs}, states_{}, inst_{NumSections, states_.data(), coeffs_.data()}
+                : coeffs_{coeffs}
+                , states_{}
+                , inst_{NumSections, states_.data(), coeffs_.data()}
             {
                 static_assert(Order > 0, "Filter order must be > 0");
             }
 
-            float32_t apply(const float32_t& sample)
+            float32_t apply(const float32_t& sample) override
             {
                 float32_t filteredSample{};
                 apply(&sample, &filteredSample, 1);
@@ -41,13 +43,8 @@ namespace Dsp
                 apply(in.data(), out.data(), in.size());
             }
 
-            template<typename BlockT>
-            void operator()(const BlockT& in, BlockT& out)
-            {
-                apply(in, out);
-            }
         private:
-            void apply(const float32_t* in, const float32_t* out, const uint32_t blockSize)
+            void apply(const float32_t* in, float32_t* out, const uint32_t blockSize)
             {
                 arm_biquad_cascade_df2T_f32(&inst_, in, out, blockSize);
             }
@@ -55,7 +52,7 @@ namespace Dsp
             const CoeffsT coeffs_;
             static constexpr size_t NumStateVarsPerSection = 2;
             static constexpr size_t NumStateVars = NumStateVarsPerSection * NumSections;
-            using StatesT std::array<float32_t, NumStateVarsPerSection * NumSections>;
+            using StatesT = std::array<float32_t, NumStateVarsPerSection * NumSections>;
             StatesT states_;
             arm_biquad_cascade_df2T_instance_f32 inst_; //< CMSIS-DSP filter instance
     };

@@ -20,13 +20,13 @@ def cmsis_dsp_coeffs(sos):
 
 def coeffs_to_str_c(coeffs):
     def section_to_str(section):
-        section_str = '{' + ', '.join([str(coeff) for coeff in section]) + '}'
+        section_str = ', '.join([str(coeff) + 'f' for coeff in section])
         return section_str
     return '{\n\t' + ',\n\t'.join([section_to_str(section) for section in coeffs]) + '\n}'
 
 if __name__ == "__main__":
     fs = 50
-    sos = sig.butter(2, [0.5, 3], btype='bandpass', fs=fs, output='sos')
+    sos = sig.butter(1, [0.5, 3], btype='bandpass', fs=fs, output='sos')
     sos_cmsis = cmsis_dsp_coeffs(sos)
     print("SciPy")
     print(sos)
