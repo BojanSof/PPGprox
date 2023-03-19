@@ -1,4 +1,5 @@
-#include <zephyr/kernel.h>
+#include <cstdio>
+
 #include <zephyr/logging/log.h>
 
 #include "Timer.hpp"
@@ -20,6 +21,8 @@ int main()
     Proximity prox{DEVICE_DT_GET_ONE(vishay_vcnl4040)};
     Neopixel neopix{DEVICE_DT_GET(DT_ALIAS(neopixel))};
     Serial serial{DEVICE_DT_GET_ONE(zephyr_cdc_acm_uart)};
+    static constexpr std::size_t serialBufSize = 64;
+    char serialBuf[serialBufSize]{};
 
     if (!prox.isReady())
     {
@@ -70,10 +73,11 @@ int main()
     {
         if(newVal)
         {
-            //proxFilteredVal = proxFilter(proxVal);
+            proxFilteredVal = proxFilter(proxVal);
             LOG_INF("Proximity value: %d\n", proxVal);
-            //LOG_INF("Proximity filtered value: %d\n", proxFilteredVal);
-            printk("%d,%d\r\n", proxVal, proxFilteredVal);
+            LOG_INF("Proximity filtered value: %d\n", proxFilteredVal);
+            auto len = sprintf(serialBuf, "%d,%d\r\n", proxVal, proxFilteredVal);
+            serial.write(reinterpret_cast<std::byte*>(serialBuf), len);
             newVal = false;
         }
         k_msleep(5);
