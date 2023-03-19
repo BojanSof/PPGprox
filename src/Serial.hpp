@@ -13,7 +13,7 @@ namespace Hardware
         public:
             Serial(const device* const dev);
             bool enable();
-            bool isDTRset();
+            bool isOpen();
             void write(const std::byte* const data, const std::size_t numBytes);
             void read(std::byte* data, const std::size_t numBytes);
     };

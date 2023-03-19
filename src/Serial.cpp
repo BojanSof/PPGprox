@@ -15,7 +15,7 @@ namespace Hardware
         return !usb_enable(NULL);
     }
 
-    bool Serial::isDTRset()
+    bool Serial::isOpen()
     {
         uint32_t dtr{};
         uart_line_ctrl_get(getDevicePointer(), UART_LINE_CTRL_DTR, &dtr);

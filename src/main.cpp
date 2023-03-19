@@ -42,18 +42,6 @@ int main()
         return -1;
     }
 
-    neopix.setColor(Color::Color{10, 0, 0});
-
-    // wait for DTR
-    LOG_INF("Waiting for DTR");
-    while(!serial.isDTRset())
-    {
-        k_msleep(100);
-    }
-    LOG_INF("DTR set");
-
-    neopix.setColor(Color::Color{0, 10, 10});
-
     Timer sampleTimer{};
     using namespace std::chrono_literals;
     uint16_t proxVal{};
@@ -64,22 +52,37 @@ int main()
         { 0.13672873f, 0.0f, -0.13672873f, 1.705965f, -0.72654253f }
     };
 
-    sampleTimer.start(20ms, [&prox, &proxVal, &newVal]{
+    auto sampleTimerCallback = [&prox, &proxVal, &newVal]{
         proxVal = prox.getProximity().value_or(proxVal);
         newVal = true;
-    });
+    };
 
     while (1)
     {
-        if(newVal)
+        if(!serial.isOpen())
         {
-            proxFilteredVal = proxFilter(proxVal);
-            LOG_INF("Proximity value: %d\n", proxVal);
-            LOG_INF("Proximity filtered value: %d\n", proxFilteredVal);
-            auto len = sprintf(serialBuf, "%d,%d\r\n", proxVal, proxFilteredVal);
-            serial.write(reinterpret_cast<std::byte*>(serialBuf), len);
-            newVal = false;
+            sampleTimer.stop();
+            neopix.setColor(Color::Color{10, 0, 0});
+            // wait for DTR
+            LOG_INF("Waiting for DTR");
+            while(!serial.isOpen())
+            {
+                k_msleep(100);
+            }
+            LOG_INF("DTR set");
+            neopix.setColor(Color::Color{0, 10, 0});
+            sampleTimer.start(20ms, sampleTimerCallback);
         }
-        k_msleep(5);
+        else
+        {
+            if(newVal)
+            {
+                proxFilteredVal = proxFilter(proxVal);
+                auto len = sprintf(serialBuf, "%d,%d\r\n", proxVal, proxFilteredVal);
+                serial.write(reinterpret_cast<std::byte*>(serialBuf), len);
+                newVal = false;
+            }
+            k_msleep(5);
+        }
     }
 }
