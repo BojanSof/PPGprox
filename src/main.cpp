@@ -1,6 +1,7 @@
 #include <cstdio>
 
 #include <zephyr/logging/log.h>
+#include <zephyr/kernel.h>
 
 #include "Timer.hpp"
 #include "Vcnl4040.hpp"
@@ -9,7 +10,7 @@
 
 #include "IIRFilter.hpp"
 
-LOG_MODULE_REGISTER(ppg_using_proximity, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(ppg_using_proximity, LOG_LEVEL_DBG);
 
 int main()
 {
@@ -42,21 +43,30 @@ int main()
         return -1;
     }
 
-    Timer sampleTimer{};
-    using namespace std::chrono_literals;
-    uint16_t proxVal{};
-    int16_t proxFilteredVal{};
-    uint64_t timestampUs{};
-    bool newVal{};
+    struct Sample
+    {
+        uint64_t timestamp;
+        uint16_t proximity;
+    };
+
+    static constexpr std::size_t sampleBufferSize = 10;
+    char __aligned(4) sampleBuffer[sampleBufferSize * sizeof(Sample)]{};
+    k_msgq sampleQueue{};
+    k_msgq_init(&sampleQueue, sampleBuffer, sizeof(Sample), sampleBufferSize);
 
     Dsp::IIRFilter<2> proxFilter{
         { 0.13672873f, 0.0f, -0.13672873f, 1.705965f, -0.72654253f }
     };
 
-    auto sampleTimerCallback = [&prox, &proxVal, &timestampUs, &newVal]{
-        proxVal = prox.getProximity().value_or(proxVal);
-        timestampUs = static_cast<uint64_t>(k_cycle_get_32()) * 1000000U / sys_clock_hw_cycles_per_sec();
-        newVal = true;
+    Timer sampleTimer{};
+    auto sampleTimerCallback = [&prox, &sampleQueue, proxValue = uint16_t(0)]() mutable {
+        proxValue = prox.getProximity().value_or(proxValue);
+        auto timestamp = static_cast<uint64_t>(k_cycle_get_32()) * 1000000U / sys_clock_hw_cycles_per_sec();
+        auto sample = Sample{timestamp, proxValue};
+        if(k_msgq_put(&sampleQueue, &sample, K_NO_WAIT) != 0)
+        {
+            LOG_WRN("Queue is full. Sample dropped.");
+        }
     };
 
     while (1)
@@ -73,18 +83,18 @@ int main()
             }
             LOG_INF("DTR set");
             neopix.setColor(Color::Color{0, 10, 0});
+            using namespace std::chrono_literals;
             sampleTimer.start(20ms, sampleTimerCallback);
         }
         else
         {
-            if(newVal)
+            Sample sample{};
+            while(k_msgq_get(&sampleQueue, &sample, K_MSEC(5)) == 0)
             {
-                proxFilteredVal = proxFilter(proxVal);
-                auto len = sprintf(serialBuf, "%" PRIu64 ",%d,%d\r\n", timestampUs, proxVal, proxFilteredVal);
+                int16_t proxFilteredVal = proxFilter(sample.proximity);
+                auto len = snprintf(serialBuf, serialBufSize, "%" PRIu64 ",%d,%d\r\n", sample.timestamp, sample.proximity, proxFilteredVal);
                 serial.write(reinterpret_cast<std::byte*>(serialBuf), len);
-                newVal = false;
             }
-            k_msleep(5);
         }
     }
 }
