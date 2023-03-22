@@ -31,5 +31,9 @@ target_sources(app PRIVATE
   "src/Vcnl4040.cpp"
   "src/Ws2812b.hpp"
   "src/Ws2812b.cpp"
+  "src/IFilter.hpp"
+  "src/IIRFilter.hpp"
+  "src/ITransform.hpp"
+  "src/Fft.hpp"
   "src/main.cpp"
 )

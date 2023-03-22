@@ -9,6 +9,7 @@
 #include "Serial.hpp"
 
 #include "IIRFilter.hpp"
+#include "Fft.hpp"
 
 LOG_MODULE_REGISTER(ppg_using_proximity, LOG_LEVEL_DBG);
 
