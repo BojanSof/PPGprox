@@ -9,7 +9,7 @@
 #include "Serial.hpp"
 
 #include "IIRFilter.hpp"
-#include "Fft.hpp"
+#include "HrProcessor.hpp"
 
 LOG_MODULE_REGISTER(ppg_using_proximity, LOG_LEVEL_DBG);
 
@@ -19,10 +19,13 @@ int main()
     using Neopixel = Hardware::Ws2812b;
     using Timer = Hardware::Timer;
     using Serial = Hardware::Serial;
+    using HeartRate = Processor::HeartRate<100>;
 
     Proximity prox{DEVICE_DT_GET_ONE(vishay_vcnl4040)};
     Neopixel neopix{DEVICE_DT_GET(DT_ALIAS(neopixel))};
     Serial serial{DEVICE_DT_GET_ONE(zephyr_cdc_acm_uart)};
+    HeartRate hr{50};
+    
     static constexpr std::size_t serialBufSize = 64;
     char serialBuf[serialBufSize]{};
 
@@ -93,7 +96,8 @@ int main()
             while(k_msgq_get(&sampleQueue, &sample, K_MSEC(5)) == 0)
             {
                 int16_t proxFilteredVal = proxFilter(sample.proximity);
-                auto len = snprintf(serialBuf, serialBufSize, "%" PRIu64 ",%d,%d\r\n", sample.timestamp, sample.proximity, proxFilteredVal);
+                auto bpm = hr.process(sample.proximity);
+                auto len = snprintf(serialBuf, serialBufSize, "%" PRIu64 ",%d,%d,%d\r\n", sample.timestamp, sample.proximity, proxFilteredVal, bpm);
                 serial.write(reinterpret_cast<std::byte*>(serialBuf), len);
             }
         }

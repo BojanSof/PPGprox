@@ -15,8 +15,8 @@ namespace Dsp
         public:
             using InputT = std::array<SampleT, InputLen>;
             using OutputT = std::array<TransformT, OutputLen>;
-            virtual OutputT transform(const InputT& input) = 0;
-            OutputT operator()(const InputT& input)
+            virtual OutputT transform(InputT& input) = 0;
+            OutputT operator()(InputT& input)
             {
                 return transform(input);
             }
