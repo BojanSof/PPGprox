@@ -22,6 +22,7 @@ namespace Processor
                 , bpm_{}
             {
                 static_assert(FftLength >= NumSamples, "FFT length must be >= than NumSamples");
+                // static_assert(false, "False");
             }
 
             uint8_t process(const SampleT& sample)
