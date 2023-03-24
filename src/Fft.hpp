@@ -12,11 +12,11 @@ namespace Dsp
 {
     template <uint16_t Length>
     class Fft
-        : public ITransform<float32_t, float32_t, Length, Length/2>
+        : public ITransform<float32_t, float32_t, Length, Length>
     {
         public:
-            using InputT = ITransform<float32_t, float32_t, Length, Length/2>::InputT;
-            using OutputT = ITransform<float32_t, float32_t, Length, Length/2>::OutputT;
+            using InputT = ITransform<float32_t, float32_t, Length, Length>::InputT;
+            using OutputT = ITransform<float32_t, float32_t, Length, Length>::OutputT;
             using MagnitudeT = std::array<float32_t, Length/2>;
             using AngleT = std::array<float32_t, Length/2>;
 
@@ -52,7 +52,6 @@ namespace Dsp
                 return angle;
             }
 
-        private:
         private:
             arm_rfft_fast_instance_f32 inst_;
     };

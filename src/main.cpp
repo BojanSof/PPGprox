@@ -3,6 +3,8 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/kernel.h>
 
+LOG_MODULE_REGISTER(ppg_using_proximity, LOG_LEVEL_DBG);
+
 #include "Timer.hpp"
 #include "Vcnl4040.hpp"
 #include "Ws2812b.hpp"
@@ -11,7 +13,6 @@
 #include "IIRFilter.hpp"
 #include "HrProcessor.hpp"
 
-LOG_MODULE_REGISTER(ppg_using_proximity, LOG_LEVEL_DBG);
 
 int main()
 {
@@ -25,7 +26,7 @@ int main()
     Neopixel neopix{DEVICE_DT_GET(DT_ALIAS(neopixel))};
     Serial serial{DEVICE_DT_GET_ONE(zephyr_cdc_acm_uart)};
     HeartRate hr{50};
-    
+
     static constexpr std::size_t serialBufSize = 64;
     char serialBuf[serialBufSize]{};
 
