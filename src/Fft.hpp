@@ -26,14 +26,15 @@ namespace Dsp
                 arm_rfft_fast_init_f32(&inst_, Length);
             }
 
-            OutputT transform(InputT& input) override
+            OutputT transform(const InputT& input) override
             {
                 OutputT transformed{};
-                arm_rfft_fast_f32(&inst_, input.data(), transformed.data(), 0);
+                InputT inputCopy{input};
+                arm_rfft_fast_f32(&inst_, inputCopy.data(), transformed.data(), 0);
                 return transformed;
             }
 
-            MagnitudeT getMagnitudeSqr(InputT& input)
+            MagnitudeT getMagnitudeSqr(const InputT& input)
             {
                 MagnitudeT mag{};
                 auto fftInterleaved = transform(input);
@@ -41,7 +42,7 @@ namespace Dsp
                 return mag;
             }
 
-            AngleT getAngleRad(InputT& input)
+            AngleT getAngleRad(const InputT& input)
             {
                 AngleT angle{};
                 auto fftInterleaved = transform(input);
