@@ -5,34 +5,32 @@
 #include <array>
 #include <cstdint>
 
+#include "PpgProcessor.hpp"
 #include "Fft.hpp"
 
 namespace Processor
 {
     template <
         size_t NumSamples
-        , size_t FftLength = 256
-        , typename SampleT = int16_t
+        , size_t FftLength = 1024
     >
     class HeartRate
     {
-        private:
-            static constexpr size_t iSampleStart = (FftLength - NumSamples) / 2;
-            static constexpr size_t iSampleEnd = FftLength - iSampleStart;
         public:
-            HeartRate(const size_t fs)
+            HeartRate(const uint16_t fs)
                 : samples_{}
                 , iSample_{}
-                , fs_{fs}
                 , fft_{}
+                , fs_{fs}
                 , bpm_{}
             {
                 static_assert(FftLength >= NumSamples, "FFT length must be >= than NumSamples");
             }
 
-            uint8_t process(const SampleT& sample)
+            uint8_t process(const Ppg::Measurement& measurement)
             {
-                samples_[iSample_++] = sample;
+                samples_[NumSamples + iSample_] = measurement.filtered;
+                iSample_++;
                 if(iSample_ == NumSamples)
                 {
                     // calculate fft
@@ -42,6 +40,11 @@ namespace Processor
                     const auto iFftMax = std::distance(fftMag.cbegin(), itrFftMax);
                     // convert maxIndex to frequency and calculate bpm
                     bpm_ = (60 * (fs_/2) * iFftMax) / (FftLength / 2);
+                    // shift samples
+                    for(size_t i = NumSamples; i < FftLength; ++i)
+                    {
+                        samples_[i - NumSamples] = samples_[i];
+                    }
                     iSample_ = 0;
                 }
                 return bpm_;
@@ -49,8 +52,8 @@ namespace Processor
         private:
             std::array<float32_t, FftLength> samples_;
             size_t iSample_;
-            const size_t fs_;
             Dsp::Fft<FftLength> fft_;
+            uint32_t fs_;
             uint8_t bpm_;
     };
 }

@@ -33,6 +33,7 @@ target_sources(app PRIVATE
   "src/Neopixel.cpp"
   "src/IFilter.hpp"
   "src/IIRFilter.hpp"
+  "src/MovingAverageFilter.hpp"
   "src/ITransform.hpp"
   "src/Fft.hpp"
   "src/PpgProcessor.hpp"

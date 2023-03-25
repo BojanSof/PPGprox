@@ -12,7 +12,7 @@ Application::Application()
     , neopixel_{DEVICE_DT_GET(DT_ALIAS(neopixel))}
     , serial_{DEVICE_DT_GET_ONE(zephyr_cdc_acm_uart)}
     , ppg_{prox_}
-    , hr_{50}
+    , hr_{sampleRate_}
     , dataCollector_{ppg_}
 { }
 
@@ -39,14 +39,14 @@ bool Application::run()
             }
             neopixel_.setColor(Color::Color{0, 10, 0});
             LOG_INF("USB connected");
-            dataCollector_.start(20ms);
+            dataCollector_.start(sampleTime_);
         }
         else
         {
             const auto ppgMeasurement = ppg_.getMeasurement(10ms);
             if(ppgMeasurement.has_value())
             {
-                auto bpm = hr_.process(ppgMeasurement.value().filtered);
+                auto bpm = hr_.process(ppgMeasurement.value());
                 auto len = snprintf(serialBuf_, sizeof(serialBuf_)
                                 , "%" PRIu64 ",%d,%d,%d\r\n"
                                 , ppgMeasurement.value().timestamp

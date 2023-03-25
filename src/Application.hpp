@@ -1,6 +1,8 @@
 #ifndef _PPG_APPLICATION_HPP
 #define _PPG_APPLICATION_HPP
 
+#include <chrono>
+
 #include "Proximity.hpp"
 #include "Neopixel.hpp"
 #include "Serial.hpp"
@@ -29,6 +31,10 @@ class Application
         // buffers, state vars, etc.
         static constexpr std::size_t serialBufSize_ = 64;
         char serialBuf_[serialBufSize_]{};
+    private:
+        // configs
+        static constexpr uint8_t sampleRate_ = 50; //< Hz
+        static constexpr auto sampleTime_ = std::chrono::milliseconds(1000 / sampleRate_);
 };
 
 #endif //_PPG_APPLICATION_HPP

@@ -1,7 +1,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/kernel.h>
 
-LOG_MODULE_REGISTER(ppg, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(ppg, LOG_LEVEL_INF);
 
 #include "Application.hpp"
 
