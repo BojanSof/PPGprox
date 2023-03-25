@@ -1,6 +1,8 @@
 #ifndef _PPG_HR_PROCESSOR_HPP
 #define _PPG_HR_PROCESSOR_HPP
 
+#include <zephyr/logging/log.h>
+
 #include <array>
 #include <cstdint>
 #include "Fft.hpp"
@@ -16,7 +18,7 @@ namespace Processor
         public:
             HeartRate(const size_t fs)
                 : samples_{}
-                , iSample_{iSampleStart}
+                , iSample_{}
                 , fs_{fs}
                 , fft_{}
                 , bpm_{}
@@ -27,10 +29,11 @@ namespace Processor
             uint8_t process(const SampleT& sample)
             {
                 samples_[iSample_++] = sample;
-                if(iSample_ == iSampleEnd)
+                if(iSample_ == NumSamples)
                 {
                     // calculate fft
                     auto fftMag = fft_.getMagnitudeSqr(samples_);
+                    // LOG_HEXDUMP_WRN(fftMag.data(), fftMag.size() * sizeof(fftMag[0]), "FFT MAG");
                     // find frequency of max fft value
                     size_t iFftMax{0};
                     float32_t fftMax{fftMag[0]};
@@ -43,8 +46,13 @@ namespace Processor
                         }
                     }
                     // convert maxIndex to frequency and calculate bpm
-                    bpm_ = (60 * (fs_/2) * iFftMax) / 256;
-                    iSample_ = iSampleStart;
+                    // bpm_ = (60 * (fs_/2) * iFftMax) / 128;
+                    // static constexpr uint8_t bpmMaxVal = 195;
+                    // static constexpr uint8_t bpmMinVal = 35;
+                    // bpm_ = std::min(bpm_, bpmMaxVal);
+                    // bpm_ = std::max(bpm_, bpmMinVal);
+                    bpm_ = iFftMax;
+                    iSample_ = 0;
                 }
                 return bpm_;
             }

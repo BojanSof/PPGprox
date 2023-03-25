@@ -94,10 +94,10 @@ int main()
         else
         {
             Sample sample{};
-            while(k_msgq_get(&sampleQueue, &sample, K_MSEC(5)) == 0)
+            while(k_msgq_get(&sampleQueue, &sample, K_MSEC(10)) == 0)
             {
                 int16_t proxFilteredVal = proxFilter(sample.proximity);
-                auto bpm = hr.process(sample.proximity);
+                auto bpm = hr.process(proxFilteredVal);
                 auto len = snprintf(serialBuf, serialBufSize, "%" PRIu64 ",%d,%d,%d\r\n", sample.timestamp, sample.proximity, proxFilteredVal, bpm);
                 serial.write(reinterpret_cast<std::byte*>(serialBuf), len);
             }
