@@ -38,5 +38,9 @@ target_sources(app PRIVATE
   "src/PpgProcessor.hpp"
   "src/PpgProcessor.cpp"
   "src/HrProcessor.hpp"
+  "src/DataCollector.hpp"
+  "src/DataCollector.cpp"
+  "src/Application.hpp"
+  "src/Application.cpp"
   "src/main.cpp"
 )
