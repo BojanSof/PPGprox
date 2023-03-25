@@ -1,14 +1,14 @@
-#include "Ws2812b.hpp"
+#include "Neopixel.hpp"
 
 #include <zephyr/drivers/led_strip.h>
 
 namespace Hardware
 {
-    Ws2812b::Ws2812b(const device* const dev)
+    Neopixel::Neopixel(const device* const dev)
         : Device{dev}
     { }
 
-    void Ws2812b::setColor(const Color::Color& c)
+    void Neopixel::setColor(const Color::Color& c)
     {
         led_rgb code = {
             .r = c.getRed(),

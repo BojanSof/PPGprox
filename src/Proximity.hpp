@@ -1,5 +1,5 @@
-#ifndef _PPG_VCNL4040_HPP
-#define _PPG_VCNL4040_HPP
+#ifndef _PPG_PROXIMITY_HPP
+#define _PPG_PROXIMITY_HPP
 
 #include <cstdint>
 #include <optional>
@@ -10,18 +10,15 @@
 
 namespace Hardware
 {
-namespace Sensor
-{
-    class Vcnl4040
+    class Proximity
         : public Device
     {
         public:
             using ValueT = uint16_t;
         public:
-            Vcnl4040(const device* const dev);
+            Proximity(const device* const dev);
             std::optional<ValueT> getProximity();
     };
 }
-}
 
-#endif //_PPG_VCNL4040_HPP
+#endif //_PPG_PROXIMITY_HPP

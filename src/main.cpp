@@ -3,29 +3,29 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/kernel.h>
 
-LOG_MODULE_REGISTER(ppg_using_proximity, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(ppg, LOG_LEVEL_DBG);
 
 #include "Timer.hpp"
-#include "Vcnl4040.hpp"
-#include "Ws2812b.hpp"
+#include "Proximity.hpp"
+#include "Neopixel.hpp"
 #include "Serial.hpp"
 
-#include "IIRFilter.hpp"
+#include "PpgProcessor.hpp"
 #include "HrProcessor.hpp"
 
 
 int main()
 {
-    using Proximity = Hardware::Sensor::Vcnl4040;
-    using Neopixel = Hardware::Ws2812b;
+    using Proximity = Hardware::Proximity;
+    using Neopixel = Hardware::Neopixel;
     using Timer = Hardware::Timer;
     using Serial = Hardware::Serial;
     using HeartRate = Processor::HeartRate<100>;
+    using Ppg = Processor::Ppg;
 
     Proximity prox{DEVICE_DT_GET_ONE(vishay_vcnl4040)};
     Neopixel neopix{DEVICE_DT_GET(DT_ALIAS(neopixel))};
     Serial serial{DEVICE_DT_GET_ONE(zephyr_cdc_acm_uart)};
-    HeartRate hr{50};
 
     static constexpr std::size_t serialBufSize = 64;
     char serialBuf[serialBufSize]{};
@@ -48,32 +48,22 @@ int main()
         return -1;
     }
 
-    struct Sample
-    {
-        uint64_t timestamp;
-        uint16_t proximity;
-    };
+    Ppg ppg{prox};
+    HeartRate hr{50};
 
-    static constexpr std::size_t sampleBufferSize = 10;
-    char __aligned(4) sampleBuffer[sampleBufferSize * sizeof(Sample)]{};
-    k_msgq sampleQueue{};
-    k_msgq_init(&sampleQueue, sampleBuffer, sizeof(Sample), sampleBufferSize);
 
-    Dsp::IIRFilter<2> proxFilter{
-        { 0.13672873f, 0.0f, -0.13672873f, 1.705965f, -0.72654253f }
-    };
 
     Timer sampleTimer{};
-    auto sampleTimerCallback = [&prox, &sampleQueue, proxValue = uint16_t(0)]() mutable {
-        proxValue = prox.getProximity().value_or(proxValue);
-        auto timestamp = static_cast<uint64_t>(k_cycle_get_32()) * 1000000U / sys_clock_hw_cycles_per_sec();
-        auto sample = Sample{timestamp, proxValue};
-        if(k_msgq_put(&sampleQueue, &sample, K_NO_WAIT) != 0)
+    auto sampleTimerCallback = [&ppg]() mutable {
+        auto timestamp = static_cast<uint64_t>(k_cycle_get_32()) * 1000000U
+                        / sys_clock_hw_cycles_per_sec();
+        if(!ppg.measure(timestamp))
         {
-            LOG_WRN("Queue is full. Sample dropped.");
+            LOG_WRN("Couldn't measure ppg");
         }
     };
 
+    using namespace std::chrono_literals;
     while (1)
     {
         if(!serial.isOpen())
@@ -88,17 +78,20 @@ int main()
             }
             LOG_INF("DTR set");
             neopix.setColor(Color::Color{0, 10, 0});
-            using namespace std::chrono_literals;
             sampleTimer.start(20ms, sampleTimerCallback);
         }
         else
         {
-            Sample sample{};
-            while(k_msgq_get(&sampleQueue, &sample, K_MSEC(10)) == 0)
+            const auto ppgMeasurement = ppg.getMeasurement(10ms);
+            if(ppgMeasurement.has_value())
             {
-                int16_t proxFilteredVal = proxFilter(sample.proximity);
-                auto bpm = hr.process(proxFilteredVal);
-                auto len = snprintf(serialBuf, serialBufSize, "%" PRIu64 ",%d,%d,%d\r\n", sample.timestamp, sample.proximity, proxFilteredVal, bpm);
+                auto bpm = hr.process(ppgMeasurement.value().filtered);
+                auto len = snprintf(serialBuf, serialBufSize
+                                , "%" PRIu64 ",%d,%d,%d\r\n"
+                                , ppgMeasurement.value().timestamp
+                                , ppgMeasurement.value().raw
+                                , ppgMeasurement.value().filtered
+                                , bpm);
                 serial.write(reinterpret_cast<std::byte*>(serialBuf), len);
             }
         }
