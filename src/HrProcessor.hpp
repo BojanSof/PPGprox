@@ -12,6 +12,7 @@ namespace Processor
 {
     template <
         size_t NumSamples
+        , size_t NumSamplesHistory = NumSamples
         , size_t FftLength = 1024
     >
     class HeartRate
@@ -25,11 +26,13 @@ namespace Processor
                 , bpm_{}
             {
                 static_assert(FftLength >= NumSamples, "FFT length must be >= than NumSamples");
+                static_assert(FftLength >= NumSamplesHistory, "FFT length must be >= than NumSamplesHistory");
+                static_assert(NumSamplesHistory >= NumSamples, "FFT length must be >= than NumSamples");
             }
 
             uint8_t process(const Ppg::Measurement& measurement)
             {
-                samples_[NumSamples + iSample_] = measurement.filtered;
+                samples_[NumSamplesHistory - NumSamples + iSample_] = measurement.filtered;
                 iSample_++;
                 if(iSample_ == NumSamples)
                 {
@@ -41,7 +44,7 @@ namespace Processor
                     // convert maxIndex to frequency and calculate bpm
                     bpm_ = (60 * (fs_/2) * iFftMax) / (FftLength / 2);
                     // shift samples
-                    for(size_t i = NumSamples; i < FftLength; ++i)
+                    for(size_t i = NumSamples; i < NumSamplesHistory; ++i)
                     {
                         samples_[i - NumSamples] = samples_[i];
                     }

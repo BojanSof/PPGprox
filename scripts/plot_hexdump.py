@@ -2,7 +2,27 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-hexdump = r"""
+
+def plot_hexdump(hexdump):
+    hexdump_str = " ".join(
+        [line.split("|")[0].strip() for line in hexdump.split("\n") if line]
+    )
+    hexdump_bytes_str = "".join(
+        [byte_str.strip() for byte_str in hexdump_str.split(" ")]
+    )
+    hexdump_bytes = bytearray.fromhex(hexdump_bytes_str)
+    # convert hexdump bytes to float32 array
+    arr = np.frombuffer(hexdump_bytes, dtype=np.float32)
+    # plot the obtained array
+    plt.figure()
+    plt.plot(arr)
+    plt.title("Hexdump array")
+    plt.show()
+    return arr
+
+
+if __name__ == "__main__":
+    hexdump = r"""
     a0 26 2f 4a b5 b4 ab 49  32 ff e2 48 98 71 e9 4a |.&/J...I 2..H.q.J
     93 84 8e 4b 9c 40 86 4b  24 87 c8 4a 86 d9 11 49 |...K.@.K $..J...I
     a8 24 81 46 12 13 e5 48  13 3f fc 49 74 02 e9 49 |.$.F...H .?.It..I
@@ -35,19 +55,5 @@ hexdump = r"""
     ab 26 74 45 6d b2 7c 45  01 25 73 43 8f 8d 91 45 |.&tEm.|E .%sC...E
     f4 28 1b 44 0b e2 51 45  e6 4d 92 45 67 04 8b 42 |.(.D..QE .M.Eg..B
     fc 1b 92 45 18 be a7 44  c3 b4 0c 45 48 67 93 45 |...E...D ...EHg.E
-"""
-
-hexdump_str = " ".join(
-    [line.split("|")[0].strip() for line in hexdump.split("\n") if line]
-)
-hexdump_bytes_str = "".join(
-    [byte_str.strip() for byte_str in hexdump_str.split(" ")]
-)
-hexdump_bytes = bytearray.fromhex(hexdump_bytes_str)
-
-# convert hexdump bytes to float32 array
-arr = np.frombuffer(hexdump_bytes, dtype=np.float32)
-
-# plot the obtained array
-plt.plot(arr)
-plt.title("Hexdump array")
+    """
+    arr = plot_hexdump(hexdump)

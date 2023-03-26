@@ -26,7 +26,8 @@ class Application
         // processors
         Processor::Ppg ppg_;
         static constexpr size_t hrSamples_ = 100;
-        Processor::HeartRate<hrSamples_> hr_;
+        static constexpr size_t hrSamplesHistory_ = 200;
+        Processor::HeartRate<hrSamples_, hrSamplesHistory_> hr_;
         DataCollector dataCollector_;
         // buffers, state vars, etc.
         static constexpr std::size_t serialBufSize_ = 64;
