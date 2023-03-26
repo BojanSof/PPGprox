@@ -9,8 +9,6 @@ list(APPEND DTC_OVERLAY_FILE
   "${CMAKE_CURRENT_LIST_DIR}/usb_cdc.overlay"
 )
 
-set(INTERPROCEDURAL_OPTIMIZATION true)
-
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(hello_world)
 
@@ -45,3 +43,4 @@ target_sources(app PRIVATE
   "src/Application.cpp"
   "src/main.cpp"
 )
+set_property(TARGET app PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
