@@ -41,6 +41,8 @@ target_sources(app PRIVATE
   "src/DataCollector.cpp"
   "src/Application.hpp"
   "src/Application.cpp"
+  "src/Benchmark.hpp"
+  "src/CycleCounter.hpp"
   "src/main.cpp"
 )
 set_property(TARGET app PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
