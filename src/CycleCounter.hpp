@@ -5,16 +5,25 @@
 
 #include "Benchmark.hpp"
 
+static constexpr uint32_t CpuFrequency = 64000000; //< 64 MHz
+
 class CycleCounter
     : public Benchmark::ICycleCounter<
         uint32_t
-        , CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC
+        , CpuFrequency
     >
 {
     public:
+        CycleCounter()
+        {
+            // enable CYCCNT
+            CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+            DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+        }
+
         time_point now() noexcept override
         {
-            return time_point{ duration{ k_cycle_get_32() } };
+            return time_point{ duration{ DWT->CYCCNT } };
         }
 };
 

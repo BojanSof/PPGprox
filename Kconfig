@@ -1,0 +1,8 @@
+config BENCHMARK_CMSIS_DSP_CODE
+	bool "Build special target to benchmark CMSIS DSP code"
+	default false
+	help
+      Instead of building main app target, build specialized target
+      for performing code benchmarking
+
+source "Kconfig.zephyr"
