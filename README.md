@@ -18,7 +18,7 @@ The DSP part uses [CMSIS-DSP](https://arm-software.github.io/CMSIS_5/DSP/html/in
 ![Connection diagram and signals plots](docs/ppg.png)
 
 The proximity sensor is sampled with a fixed sample rate of 50 Hz.
-The raw proximity samples are filtered with first-order Butterworth IIR bandpass filter and are stored in a circular buffer.
+The raw proximity samples are filtered with second-order Butterworth IIR bandpass filter and are stored in a circular buffer.
 When the required amount of samples is collected, we perform FFT on the samples and find the frequency bin of the maximum in the amplitude spectrum.
 Then we can use this frequency to compute the heart rate in beats per minute (BPM).
 The USB is configured in composite mode, providing options for DFU and USB-CDC.
