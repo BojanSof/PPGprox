@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <cstddef>
 #include <chrono>
+#include <tuple>
+#include <type_traits>
 #include <utility> //< std::forward
 
 namespace Benchmark
@@ -21,7 +23,22 @@ namespace Benchmark
             virtual time_point now() noexcept = 0;
     };
 
-    template <typename CounterT, typename Func, typename... Args>
+        // non-void functions
+    template <typename CounterT, typename Func, typename... Args
+            , typename R = std::invoke_result_t<Func, Args...>
+            , std::enable_if_t<!std::is_void_v<R>, int> = 0>
+    decltype(auto) benchmark(CounterT& counter, Func&& f, Args&&... args)
+    {
+        auto startTime = counter.now();
+        auto retVal = f(std::forward<Args>(args)...);
+        auto endTime = counter.now();
+        return std::tuple{endTime - startTime, retVal};
+    }
+
+    // void functions
+    template <typename CounterT, typename Func, typename... Args
+            , typename R = std::invoke_result_t<Func, Args...>
+            , std::enable_if_t<std::is_void_v<R>, int> = 0>
     decltype(auto) benchmark(CounterT& counter, Func&& f, Args&&... args)
     {
         auto startTime = counter.now();

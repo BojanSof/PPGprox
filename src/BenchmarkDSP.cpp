@@ -1,4 +1,5 @@
 #include <array>
+#include <string_view>
 
 #include <zephyr/logging/log.h>
 #include <zephyr/kernel.h>
@@ -10,6 +11,22 @@ LOG_MODULE_REGISTER(ppg, LOG_LEVEL_INF);
 #include "CycleCounter.hpp"
 #include "IIRFilter.hpp"
 #include "Fft.hpp"
+
+template<typename ArrayT>
+static void logArray(const ArrayT& arr, const char* const msg = "")
+{
+    if(arr.size() * sizeof(arr[0]) >= 4096)
+    {
+        const auto halfSize = arr.size() / 2;
+        const auto halfSizeBytes  = arr.size() / 2;
+        LOG_HEXDUMP_INF(arr.data(), halfSizeBytes, msg);
+        LOG_HEXDUMP_INF(arr.data() + halfSize, halfSizeBytes, msg);
+    }
+    else
+    {
+        LOG_HEXDUMP_INF(arr.data(), arr.size() * sizeof(arr[0]), msg);
+    }
+}
 
 int main()
 {
@@ -162,15 +179,17 @@ int main()
         -4.755282581475647f, -4.755282581475927f, -2.9389262614624236f, -1.9596824708904002e-13f, 2.938926261462566f, 4.7552825814756305f, 4.755282581475768f
     }};
     LOG_INF("Performing benchmark 1");
-    auto res = Benchmark::benchmark(cycCounter, [&fft](const Fft::InputT& input) {
-        fft.transform(input);
+    auto [duration, fftResult] = Benchmark::benchmark(cycCounter, [&fft](const Fft::InputT& input) {
+        return fft.transform(input);
     }, inputData);
-    auto ticks = std::chrono::duration_cast<std::chrono::microseconds>(res).count();
+    auto ticks = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
     auto time = 1000000U * ticks / CycleCounter::period::den;
     LOG_INF("Benchmark 1 done");
     LOG_INF("Execution time");
     LOG_INF("Ticks = %lld", ticks);
     LOG_INF("Time = %lld us", time);
+    logArray(inputData, "Input data (float32)");
+    logArray(fftResult, "FFT result (float32)");
         
     while(true) { k_msleep(100); }
 
