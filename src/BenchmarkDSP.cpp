@@ -18,14 +18,16 @@ static void logArray(const ArrayT& arr, const char* const msg = "")
     if(arr.size() * sizeof(arr[0]) >= 4096)
     {
         const auto halfSize = arr.size() / 2;
-        const auto halfSizeBytes  = arr.size() / 2;
+        const auto halfSizeBytes  = halfSize * sizeof(arr[0]);
         LOG_HEXDUMP_INF(arr.data(), halfSizeBytes, msg);
+        k_msleep(300);
         LOG_HEXDUMP_INF(arr.data() + halfSize, halfSizeBytes, msg);
     }
     else
     {
         LOG_HEXDUMP_INF(arr.data(), arr.size() * sizeof(arr[0]), msg);
     }
+    k_msleep(300);
 }
 
 int main()
@@ -50,6 +52,7 @@ int main()
     LOG_INF("----------------------------------------------------------------");
     LOG_INF(" 3. IIR filter block (Butterworth, 1st order)                   ");
     LOG_INF("----------------------------------------------------------------");
+    k_msleep(300);
 
     using InputT = std::array<float32_t, 1024>;
     static constexpr InputT inputData{{
@@ -182,6 +185,7 @@ int main()
         -207.54101120408737, 95.10565162950388, 396.25244152355066, 294.5715936042122, -58.09955777131478, -174.38146825353297, 95.1056516294988, 363.09289857299433, 
         242.33502316437165, -117.71759648372301, -229.56900585782483, 58.77852522922203, 346.1990838608734, 231.5813760298092, -133.03324189764612 
     }};
+    logArray(inputData, "Input data (float32)");
 
     {
         static constexpr uint16_t fftLength = 1024;
@@ -197,7 +201,6 @@ int main()
         LOG_INF("Execution time");
         LOG_INF("Ticks = %lld", ticks);
         LOG_INF("Time = %lld us", time);
-        logArray(inputData, "Input data (float32)");
         logArray(fftResult, "FFT result (float32)");
     }
 
@@ -218,7 +221,6 @@ int main()
         LOG_INF("Execution time");
         LOG_INF("Ticks = %lld", ticks);
         LOG_INF("Time = %lld us", time);
-        logArray(inputData, "Input data (float32)");
         logArray(outputData, "Output data (float32)");
     }
 
@@ -236,7 +238,6 @@ int main()
         LOG_INF("Execution time");
         LOG_INF("Ticks = %lld", ticks);
         LOG_INF("Time = %lld us", time);
-        logArray(inputData, "Input data (float32)");
         logArray(outputData, "Output data (float32)");
     }
     
