@@ -8,6 +8,7 @@ namespace Processor
 {
     Ppg::Ppg(Ppg::Proximity& sensor)
         : sensor_{sensor}
+        // sos = sig.butter(1, [0.5, 3], btype='bandpass', fs=fs, output='sos')
         , filter_{{ 0.13672873f, 0.0f, -0.13672873f, 1.705965f, -0.72654253f }}
     {
         k_msgq_init(&queue_, queueBuffer_, sizeof(Measurement), queueSize_);

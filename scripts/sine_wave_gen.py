@@ -25,4 +25,7 @@ if __name__ == "__main__":
     sine_fft_freqs = fft.fftfreq(n, 1/fs)
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 5))
     ax1.plot(sine)
+    ax1.set_title("Signal in time domain")
     ax2.plot(sine_fft_freqs[:n//2], np.abs(sine_fft)[:n//2])
+    ax2.set_title("Signal in frequency domain")
+    fig.tight_layout()
