@@ -1,2 +1,3 @@
 * text=auto eol=lf
 *.ipynb -linguist-detectable
+scripts/benchmark_comparison.py -linguist-detectable
